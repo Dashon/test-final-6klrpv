@@ -1,0 +1,111 @@
+# Prometheus Rules Configuration
+# Version: 1.0.0
+# Purpose: Define alerting and recording rules for the AI-Enhanced Social Travel Platform
+
+groups:
+  # Service Availability Monitoring
+  - name: service_availability
+    rules:
+      # Critical service downtime alerts
+      - alert: ServiceDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service has been down for more than 5 minutes"
+
+      # High error rate detection
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) by (service) / sum(rate(http_requests_total[5m])) by (service) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate for {{ $labels.service }}"
+          description: "Error rate is above 5% for 5 minutes"
+
+  # Performance SLO Monitoring
+  - name: performance_slos
+    rules:
+      # API Latency monitoring (SLO: <200ms)
+      - alert: APILatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API latency for {{ $labels.service }}"
+          description: "95th percentile latency is above 200ms"
+
+      # Chat Latency monitoring (SLO: <200ms)
+      - alert: ChatLatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(websocket_message_duration_seconds_bucket{service="social-service"}[5m])) by (le)) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High chat latency"
+          description: "Chat message latency is above 200ms"
+
+  # Resource Utilization Monitoring
+  - name: resource_utilization
+    rules:
+      # CPU Usage monitoring
+      - alert: HighCPUUsage
+        expr: sum(rate(container_cpu_usage_seconds_total[5m])) by (pod) / sum(container_spec_cpu_quota) by (pod) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage for {{ $labels.pod }}"
+          description: "CPU usage above 80% for 10 minutes"
+
+      # Memory Usage monitoring
+      - alert: HighMemoryUsage
+        expr: sum(container_memory_usage_bytes) by (pod) / sum(container_spec_memory_limit_bytes) by (pod) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage for {{ $labels.pod }}"
+          description: "Memory usage above 80% for 10 minutes"
+
+  # Business KPI Monitoring
+  - name: business_metrics
+    rules:
+      # Booking success rate recording
+      - record: booking_success_rate
+        expr: sum(rate(booking_requests_total{status="success"}[1h])) / sum(rate(booking_requests_total[1h]))
+
+      # User satisfaction score recording
+      - record: user_satisfaction_score
+        expr: avg(user_rating_total) by (feature)
+
+      # Low user satisfaction alert (SLO: 4.5+)
+      - alert: LowUserSatisfaction
+        expr: avg(user_rating_total) by (feature) < 4.5
+        for: 24h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low user satisfaction for {{ $labels.feature }}"
+          description: "Average rating below 4.5 for 24 hours"
+
+  # ML Service Metrics
+  - name: ml_service_metrics
+    rules:
+      # ML inference duration monitoring
+      - alert: HighInferenceDuration
+        expr: histogram_quantile(0.95, sum(rate(ml_inference_duration_seconds_bucket[5m])) by (le, model)) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High inference duration for {{ $labels.model }}"
+          description: "ML model inference taking longer than 1 second"
+
+      # Model accuracy recording
+      - record: model_accuracy
+        expr: sum(ml_prediction_correct_total) / sum(ml_prediction_total)
