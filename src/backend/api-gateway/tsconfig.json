@@ -1,0 +1,65 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    // Override base configuration for API Gateway specific needs
+    "rootDir": "src",
+    "outDir": "dist",
+    "baseUrl": ".",
+    
+    // Ensure compatibility with Kong Plugin Development
+    "target": "es2020",
+    "module": "commonjs",
+    
+    // Maintain strict type checking
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    
+    // Custom path aliases for API Gateway organization
+    "paths": {
+      "@plugins/*": ["src/plugins/*"],
+      "@config/*": ["src/config/*"],
+      "@shared/*": ["../shared/*"],
+      "@middleware/*": ["src/middleware/*"],
+      "@services/*": ["src/services/*"]
+    },
+    
+    // Type definitions for Kong PDK and testing
+    "types": [
+      "@kong/kong-pdk",
+      "node",
+      "jest"
+    ],
+    
+    // ESLint plugin for TypeScript
+    "plugins": [
+      {
+        "name": "@typescript-eslint/eslint-plugin"
+      }
+    ],
+    
+    // Additional type definition locations
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
+  },
+  
+  // Source files to include
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "src/plugins/**/*.ts",
+    "src/types/**/*.d.ts"
+  ],
+  
+  // Files to exclude
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
+}
