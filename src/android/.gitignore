@@ -1,0 +1,106 @@
+# Build files and directories
+android/app/build/
+android/build/
+android/.gradle/
+android/app/release/
+android/app/*.apk
+android/app/debug/
+android/app/profile/
+android/app/src/main/assets/index.android.bundle
+android/app/src/main/res/drawable-*/node_modules*
+
+# Dependencies and package management
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+package-lock.json
+yarn.lock
+
+# Environment and configuration files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+local.properties
+gradle.properties
+
+# IDE and editor specific files
+.idea/
+.vscode/
+*.iml
+.project
+.settings/
+.classpath
+android/app/.cxx
+android/.idea/
+
+# Generated and temporary files
+*.hprof
+*.log
+.DS_Store
+coverage/
+e2e/artifacts/
+tmp/
+__tests__/coverage/
+android/captures/
+*.jks
+
+# Security sensitive files
+android/app/google-services.json
+android/keystores/release.keystore
+android/app/src/main/assets/*.keystore
+android/app/debug.keystore
+android/keystore.properties
+android/app/proguard-rules.pro
+
+# Gradle files
+.gradle/
+build/
+gradle-wrapper.jar
+
+# Local configuration files
+local.properties
+*.properties
+!gradle-wrapper.properties
+
+# Native development files
+.externalNativeBuild/
+.cxx/
+
+# Crashlytics
+crashlytics.properties
+crashlytics-build.properties
+com_crashlytics_export_strings.xml
+
+# Signing configs and keystores
+signing.properties
+*.keystore
+*.jks
+*.pepk
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/readme.md
+
+# Buck
+buck-out/
+.buckconfig.local
+.buckd/
+.buckversion
+.fakebuckversion
+
+# Android Profiling
+*.hprof
+
+# Misc
+*.swp
+*.bak
+*~
+.navigation/
+captures/
+output.json
