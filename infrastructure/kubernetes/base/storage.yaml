@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: List
+items:
+  # Storage Class Definition
+  - apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: standard-rwo
+      annotations:
+        storageclass.kubernetes.io/is-default-class: "true"
+        # Platform annotations
+        platform.ai/description: "Standard RWO storage class for AI Travel Platform"
+        platform.ai/version: "1.0.0"
+    provisioner: ebs.csi.aws.com
+    parameters:
+      # AWS EBS specific parameters
+      type: gp3
+      encrypted: "true"
+      kmsKeyId: auto
+      iops: "3000"
+      throughput: "125"
+      # Additional EBS parameters for performance
+      fsType: ext4
+      tagSpecification: "kubernetes.io/cluster/${CLUSTER_NAME}"
+    reclaimPolicy: Retain
+    volumeBindingMode: WaitForFirstConsumer
+    allowVolumeExpansion: true
+    mountOptions:
+      - noatime
+      - nodiratime
+
+  # ML Models PVC
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: ml-models-pvc
+      namespace: ai-travel-platform
+      annotations:
+        backup.velero.io/backup-volumes: "true"
+        platform.ai/backup-frequency: "daily"
+        platform.ai/data-classification: "sensitive"
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: standard-rwo
+      resources:
+        requests:
+          storage: 100Gi
+
+  # PostgreSQL Data PVC
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: postgresql-data-pvc
+      namespace: ai-travel-platform
+      annotations:
+        backup.velero.io/backup-volumes: "true"
+        platform.ai/backup-frequency: "hourly"
+        platform.ai/data-classification: "sensitive"
+        platform.ai/encryption-required: "true"
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: standard-rwo
+      resources:
+        requests:
+          storage: 50Gi
+
+  # MongoDB Data PVC
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: mongodb-data-pvc
+      namespace: ai-travel-platform
+      annotations:
+        backup.velero.io/backup-volumes: "true"
+        platform.ai/backup-frequency: "hourly"
+        platform.ai/data-classification: "sensitive"
+        platform.ai/encryption-required: "true"
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: standard-rwo
+      resources:
+        requests:
+          storage: 50Gi
+
+  # Redis Cache PVC
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: redis-cache-pvc
+      namespace: ai-travel-platform
+      annotations:
+        backup.velero.io/backup-volumes: "true"
+        platform.ai/backup-frequency: "daily"
+        platform.ai/data-classification: "internal"
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: standard-rwo
+      resources:
+        requests:
+          storage: 20Gi
