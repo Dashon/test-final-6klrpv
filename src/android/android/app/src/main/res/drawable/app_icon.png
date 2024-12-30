@@ -1,0 +1,34 @@
+Base (mdpi) Icon Specifications:
+- Dimensions: 48x48dp (48x48 pixels @1x scale)
+- Format: PNG with transparency support
+- Color Space: sRGB
+- Safe Zone: 44x44dp with 2dp padding on all sides
+- Primary Color: #1A73E8 (Material Blue)
+- Secondary Color: #34A853 (Material Green)
+
+Design Guidelines:
+- Material Design keyline grid: 1dp
+- Stroke weight: 2dp
+- Corner radius: 4dp
+- Clear silhouette for recognition
+- Consistent branding with platform style
+
+Required Density Variations:
+1. mdpi (1.0x): 48x48px - This base file
+2. hdpi (1.5x): 72x72px - Referenced in drawable-hdpi/
+3. xhdpi (2.0x): 96x96px - Referenced in drawable-xhdpi/
+4. xxhdpi (3.0x): 144x144px - Referenced in drawable-xxhdpi/
+
+Usage Contexts:
+- Launcher icon (full color)
+- Status bar notifications (monochrome)
+- Recent apps switcher (full color)
+
+Platform Requirements:
+- Minimum SDK: 21
+- Target SDK: 33
+- Legacy icon support required
+- No adaptive icon implementation
+
+The icon should be exported as a PNG file with transparency and placed at:
+src/android/android/app/src/main/res/drawable/app_icon.png
