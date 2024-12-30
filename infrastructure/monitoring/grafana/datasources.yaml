@@ -1,0 +1,109 @@
+# Grafana Datasources Configuration v9.5.x
+# Purpose: Configure monitoring datasources for metrics, logs, and security events
+# Supports: Platform performance monitoring, system observability, and security monitoring
+
+apiVersion: 1
+
+# Define datasources for comprehensive platform monitoring
+datasources:
+  # Primary metrics datasource for platform performance monitoring
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    version: 1
+    editable: true
+    jsonData:
+      # 15s interval for high-resolution metrics collection
+      timeInterval: "15s"
+      queryTimeout: "30s"
+      httpMethod: POST
+      # Trace correlation for distributed tracing
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: jaeger
+
+  # Log aggregation and security event monitoring
+  - name: Elasticsearch
+    type: elasticsearch
+    access: proxy
+    url: http://elasticsearch:9200
+    # Dynamic index pattern for daily log rotation
+    database: "[ai-travel-platform-]YYYY.MM.DD"
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      timeField: "@timestamp"
+      # ELK Stack version alignment
+      esVersion: "8.7.x"
+      # Performance optimization for distributed deployments
+      maxConcurrentShardRequests: 5
+      # Log field mappings for standardized querying
+      logMessageField: "message"
+      logLevelField: "level"
+      interval: "Daily"
+      # 1-minute aggregation for log analysis
+      timeInterval: "1m"
+      fieldsSeparator: "."
+      includeFrozen: false
+
+  # System metrics and container monitoring
+  - name: Prometheus-System
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    database: "system_metrics"
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      timeInterval: "30s"
+      queryTimeout: "30s"
+      httpMethod: POST
+      # System metrics scraping configuration
+      customQueryParameters:
+        job: ["node_exporter", "cadvisor"]
+
+  # Business metrics and KPI monitoring
+  - name: Prometheus-Business
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    database: "business_metrics"
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      timeInterval: "1m"
+      queryTimeout: "45s"
+      httpMethod: POST
+      # Business metrics collection settings
+      customQueryParameters:
+        job: ["business_metrics"]
+
+  # Security events and audit logging
+  - name: Elasticsearch-Security
+    type: elasticsearch
+    access: proxy
+    url: http://elasticsearch:9200
+    database: "[security-events-]YYYY.MM.DD"
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      timeField: "@timestamp"
+      esVersion: "8.7.x"
+      maxConcurrentShardRequests: 3
+      # Security event field mappings
+      logMessageField: "event_message"
+      logLevelField: "severity"
+      interval: "Daily"
+      timeInterval: "30s"
+      fieldsSeparator: "."
+      includeFrozen: false
+      # Security index settings
+      securitySettings:
+        enableAuditLogging: true
+        retentionDays: 90
