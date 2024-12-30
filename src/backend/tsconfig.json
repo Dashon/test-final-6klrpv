@@ -1,0 +1,84 @@
+{
+  "compilerOptions": {
+    // ECMAScript Target and Module Configuration
+    "target": "ES2022",
+    "module": "CommonJS",
+    "lib": ["ES2022"],
+    
+    // Code Generation Options
+    "declaration": true,
+    "sourceMap": true,
+    "removeComments": false,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "composite": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    
+    // Strict Type Checking
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    
+    // Additional Checks
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    
+    // Module Resolution
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["shared/*"]
+    },
+    "typeRoots": ["./node_modules/@types"],
+    "types": ["node", "jest"],
+    
+    // Interoperability Constraints
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    
+    // Experimental Features
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    
+    // Advanced Options
+    "skipLibCheck": true
+  },
+  
+  // Project References for Microservices
+  "references": [
+    { "path": "./api-gateway" },
+    { "path": "./booking-service" },
+    { "path": "./persona-service" },
+    { "path": "./professional-service" },
+    { "path": "./social-service" }
+  ],
+  
+  // Source File Management
+  "include": [
+    "shared/**/*.ts",
+    "api-gateway/src/**/*.ts",
+    "booking-service/src/**/*.ts",
+    "persona-service/src/**/*.ts",
+    "professional-service/src/**/*.ts",
+    "social-service/src/**/*.ts"
+  ],
+  
+  // Excluded Paths
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__/**"
+  ]
+}
