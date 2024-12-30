@@ -1,0 +1,260 @@
+_format_version: "2.1"
+_transform: true
+
+# Global configuration
+prefix: /api/v1
+admin_listen: 0.0.0.0:8001
+proxy_listen: 0.0.0.0:8000
+
+# Services configuration
+services:
+  - name: booking-service
+    url: http://booking-service:3000
+    protocol: http
+    connect_timeout: 60000
+    write_timeout: 60000
+    read_timeout: 60000
+    retries: 5
+    routes:
+      - name: booking-routes
+        paths:
+          - /api/v1/bookings
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+        strip_path: true
+        preserve_host: false
+        protocols:
+          - http
+          - https
+
+  - name: persona-service
+    url: http://persona-service:3001
+    protocol: http
+    connect_timeout: 60000
+    write_timeout: 60000
+    read_timeout: 60000
+    retries: 5
+    routes:
+      - name: persona-routes
+        paths:
+          - /api/v1/personas
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+        strip_path: true
+        preserve_host: false
+        protocols:
+          - http
+          - https
+
+  - name: social-service
+    url: http://social-service:3002
+    protocol: http
+    connect_timeout: 60000
+    write_timeout: 60000
+    read_timeout: 60000
+    retries: 5
+    routes:
+      - name: social-routes
+        paths:
+          - /api/v1/chat
+          - /api/v1/rooms
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+        strip_path: true
+        preserve_host: false
+        protocols:
+          - http
+          - https
+
+  - name: professional-service
+    url: http://professional-service:3003
+    protocol: http
+    connect_timeout: 60000
+    write_timeout: 60000
+    read_timeout: 60000
+    retries: 5
+    routes:
+      - name: professional-routes
+        paths:
+          - /api/v1/agents
+          - /api/v1/consultations
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+        strip_path: true
+        preserve_host: false
+        protocols:
+          - http
+          - https
+
+  - name: ml-service
+    url: http://ml-service:3004
+    protocol: http
+    connect_timeout: 60000
+    write_timeout: 60000
+    read_timeout: 60000
+    retries: 3
+    routes:
+      - name: ml-routes
+        paths:
+          - /api/v1/recommendations
+        methods:
+          - GET
+          - POST
+        strip_path: true
+        preserve_host: false
+        protocols:
+          - http
+          - https
+
+# Plugins configuration
+plugins:
+  - name: ai-travel-auth
+    config:
+      jwt_secret: ${JWT_SECRET}
+      token_expiry: ${TOKEN_EXPIRY}
+      token_encryption:
+        algorithm: AES-256-GCM
+        key_rotation_interval: 24h
+      public_routes:
+        - /api/v1/auth/login
+        - /api/v1/auth/register
+        - /api/v1/auth/password-reset
+      rbac:
+        roles:
+          - user
+          - professional
+          - admin
+        permissions:
+          user:
+            - read:own
+            - write:own
+          professional:
+            - read:own
+            - write:own
+            - manage:agents
+          admin:
+            - read:all
+            - write:all
+            - manage:all
+      redis:
+        host: ${REDIS_HOST}
+        port: ${REDIS_PORT}
+        password: ${REDIS_PASSWORD}
+        database: 0
+        pool_size: 20
+        idle_timeout: 10000
+        connection_timeout: 1000
+
+  - name: rate-limiting
+    config:
+      public_routes_limit: 100
+      user_routes_limit: 1000
+      professional_routes_limit: 5000
+      system_routes_limit: 10000
+      window_size_ms: 3600000
+      algorithm: sliding-window
+      redis:
+        host: ${REDIS_HOST}
+        port: ${REDIS_PORT}
+        password: ${REDIS_PASSWORD}
+        database: 0
+        pool_size: 20
+        idle_timeout: 10000
+        connection_timeout: 1000
+        sentinel:
+          master_name: mymaster
+          nodes:
+            - ${REDIS_SENTINEL_1}
+            - ${REDIS_SENTINEL_2}
+      metrics:
+        enabled: true
+        prefix: kong_rate_limit
+        sample_rate: 1
+
+  - name: request-transformer
+    config:
+      max_body_size: 10485760
+      compression:
+        enabled: true
+        types:
+          - gzip
+          - deflate
+        min_length: 1024
+      add_headers:
+        X-Correlation-ID:
+          - ${request.id}
+        X-Content-Type-Options:
+          - nosniff
+        X-Frame-Options:
+          - DENY
+        X-XSS-Protection:
+          - 1; mode=block
+        Strict-Transport-Security:
+          - max-age=31536000; includeSubDomains
+      remove_headers:
+        - X-Powered-By
+        - Server
+      metrics:
+        enabled: true
+        latency_tracking: true
+        request_size_tracking: true
+        response_size_tracking: true
+
+  - name: cors
+    config:
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      headers:
+        - Authorization
+        - Content-Type
+        - X-Correlation-ID
+      exposed_headers:
+        - X-Correlation-ID
+      credentials: true
+      max_age: 3600
+
+  - name: prometheus
+    config:
+      status_code_metrics: true
+      latency_metrics: true
+      upstream_health_metrics: true
+      per_consumer_metrics: true
+
+  - name: ip-restriction
+    config:
+      allow:
+        - 127.0.0.1
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+      deny:
+        - 0.0.0.0/0
+
+  - name: response-transformer
+    config:
+      add:
+        headers:
+          - X-Kong-Upstream-Latency:${upstream_response_time}
+          - X-Kong-Proxy-Latency:${kong_processing_time}
+      remove:
+        headers:
+          - Server
+          - Via
