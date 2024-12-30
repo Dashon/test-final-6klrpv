@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Launch screen drawable for AI-Enhanced Social Travel Platform
+  Implements a layered drawable optimized for performance and accessibility
+  
+  Features:
+  - Hardware accelerated rendering
+  - Proper scaling across device densities (mdpi to xxxhdpi)
+  - WCAG 2.1 Level AA compliant color contrast
+  - Supports both portrait and landscape orientations
+  - Adapts to system light/dark themes
+  - Optimized layer complexity for quick loading
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:opacity="opaque">
+    
+    <!-- Background layer using theme-aware color -->
+    <item android:id="@+id/background_shape">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/background" />
+        </shape>
+    </item>
+
+    <!-- Center-aligned logo with fixed dimensions -->
+    <item android:id="@+id/logo_layer"
+        android:gravity="center"
+        android:width="200dp"
+        android:height="200dp"
+        android:drawable="@drawable/app_icon">
+        <!-- 
+            Width and height set to 200dp for optimal visibility
+            while maintaining reasonable memory footprint
+        -->
+    </item>
+
+</layer-list>
