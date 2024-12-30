@@ -1,0 +1,63 @@
+# AI-Enhanced Social Travel Platform robots.txt
+# Protects sensitive routes while allowing indexing of public content
+# Implements rate limiting for major search engines
+# Ensures GDPR compliance and user privacy
+# Last updated: 2024
+
+# Default rules for all crawlers
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /forgot-password
+Allow: /reset-password
+Allow: /about
+Allow: /contact
+Allow: /terms
+Allow: /privacy
+Allow: /help
+Allow: /faq
+Allow: /blog/*
+Allow: /assets/*
+Allow: /images/*
+Allow: /manifest.json
+Allow: /favicon.ico
+Allow: /sitemap.xml
+
+Disallow: /dashboard/*
+Disallow: /booking/*
+Disallow: /chat/*
+Disallow: /persona/*
+Disallow: /profile/*
+Disallow: /professional/*
+Disallow: /agent-management/*
+Disallow: /analytics/*
+Disallow: /consultation/*
+Disallow: /api/*
+Disallow: /settings/*
+Disallow: /payment/*
+Disallow: /notifications/*
+Disallow: /messages/*
+Disallow: /admin/*
+Disallow: /internal/*
+Disallow: /user/*
+Disallow: /temp/*
+Disallow: /draft/*
+
+# Google-specific crawler rules
+User-agent: Googlebot
+Allow: /
+Allow: /sitemap.xml
+Allow: /blog/*
+Disallow: /api/*
+Disallow: /internal/*
+Crawl-delay: 1
+
+# Bing-specific crawler rules
+User-agent: Bingbot
+Allow: /
+Allow: /sitemap.xml
+Crawl-delay: 2
+
+# Sitemap declaration
+Sitemap: https://example.com/sitemap.xml
