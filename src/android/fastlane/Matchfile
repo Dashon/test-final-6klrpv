@@ -1,0 +1,117 @@
+# Fastlane Match configuration for Android keystore management
+# Version: 0.3.0
+# Purpose: Secure centralized keystore management across development team
+
+# Import required plugins
+require 'fastlane-plugin-match_keystore' # @version 0.3.0
+
+# Import app package identifier from Appfile
+import_from_git(
+  url: ENV['MATCH_GIT_URL'],
+  branch: 'main',
+  clone_branch_directly: true
+)
+
+# Storage configuration
+storage_mode("git")
+git_url(ENV['MATCH_GIT_URL'])
+git_branch("main")
+type("keystore") # Specify we're managing Android keystores
+
+# App and team configuration
+app_identifier("com.aitravelplatform") # Must match package_name from Appfile
+team_id(ENV['MATCH_TEAM_ID'])
+
+# Security configuration
+encryption_password(ENV['MATCH_ENCRYPTION_PASSWORD'])
+readonly(ENV['CI'] == true) # Read-only mode in CI environment
+
+# Advanced security settings
+keystore_configuration({
+  type: "jks",
+  key_algorithm: "RSA",
+  key_size: 4096,
+  validity_period: "30y",
+  key_usage: [
+    "digitalSignature",
+    "keyEncipherment"
+  ],
+  backup_enabled: true,
+  backup_frequency: "daily",
+  backup_retention: "90d"
+})
+
+# Audit logging configuration
+audit_configuration({
+  enabled: true,
+  log_retention: "365d",
+  alert_on: [
+    "unauthorized_access",
+    "key_expiry",
+    "rotation_due"
+  ]
+})
+
+# Key rotation policy
+rotation_configuration({
+  policy: "yearly",
+  notification_period: "60d",
+  require_approval: true
+})
+
+# Validation and security checks
+before_all do |lane, options|
+  validate_environment
+  verify_git_security
+  check_encryption_keys
+end
+
+# Error handling and reporting
+error do |lane, exception, options|
+  notify_security_team if exception.message.include?("security")
+  raise exception # Re-raise after notification
+end
+
+# Export sync_keystore function for use in Fastfile
+def sync_keystore(force_refresh: false)
+  UI.message("Syncing keystore with security validation...")
+  
+  # Validate environment and permissions
+  validate_environment
+  verify_team_access
+  
+  # Sync with security checks
+  match_keystore(
+    git_url: git_url,
+    type: type,
+    app_identifier: app_identifier,
+    readonly: readonly,
+    force: force_refresh,
+    verbose: true,
+    skip_confirmation: ENV['CI'] == true,
+    keystore_path: "#{Dir.pwd}/../android/app/keystore",
+    validate_certificate_chain: true
+  )
+end
+
+# Helper function to create new keystore
+def create_keystore(alias_name:, alias_password:, key_config:)
+  UI.message("Creating new keystore with enhanced security...")
+  
+  # Validate permissions
+  verify_team_access
+  
+  # Generate keystore with security parameters
+  match_keystore(
+    git_url: git_url,
+    type: type,
+    app_identifier: app_identifier,
+    generate_new: true,
+    alias_name: alias_name,
+    alias_password: alias_password,
+    key_configuration: key_config,
+    force_key_generation: false,
+    skip_confirmation: false,
+    verbose: true
+  )
+end
