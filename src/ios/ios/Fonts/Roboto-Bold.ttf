@@ -1,0 +1,32 @@
+Steps to implement:
+
+1. Download Roboto-Bold.ttf from Google Fonts:
+   https://fonts.google.com/specimen/Roboto
+   Select the Bold (700) weight variant
+
+2. Place the downloaded Roboto-Bold.ttf file in:
+   src/ios/ios/Fonts/Roboto-Bold.ttf
+
+3. Verify the file has the following properties:
+   - Format: TrueType Font (.ttf)
+   - Family: Roboto
+   - Weight: 700 (Bold)
+   - Style: Normal
+   - Version: Latest stable release
+   - License: Apache License 2.0
+
+4. Add font to Info.plist:
+   <key>UIAppFonts</key>
+   <array>
+       <string>Roboto-Bold.ttf</string>
+   </array>
+
+5. Reference in typography.ts:
+   export const FONT_BOLD = "Roboto-Bold"
+
+Font specifications:
+- Supports iOS 12.0+
+- Optimized for Retina displays
+- Includes full Unicode character set
+- Supports Dynamic Type
+- Pre-compiled for optimal performance
