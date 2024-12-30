@@ -1,0 +1,52 @@
+# Service manifest for ML service handling AI personas and ML models
+# Kubernetes version: v1.26.x
+# Provides internal access to ML service pods with session affinity and monitoring
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: ml-service
+  namespace: ai-travel-platform
+  labels:
+    app: ml-service
+    component: ai
+    part-of: ai-travel-platform
+    tier: backend
+    managed-by: kubernetes
+  annotations:
+    # Prometheus monitoring configuration
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+    prometheus.io/path: "/metrics"
+    # AWS Load Balancer configuration for enhanced networking
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+
+spec:
+  # Using ClusterIP for internal service access
+  type: ClusterIP
+  
+  # Port configuration for model serving and metrics
+  ports:
+    # Main port for ML model serving (TensorFlow/PyTorch models)
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+      name: http-model-serving
+    
+    # Dedicated port for metrics collection
+    - port: 8001
+      targetPort: 8001
+      protocol: TCP
+      name: http-metrics
+  
+  # Selector matching deployment labels
+  selector:
+    app: ml-service
+  
+  # Session affinity configuration for consistent model serving
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      # 3-hour timeout for model consistency
+      timeoutSeconds: 10800
