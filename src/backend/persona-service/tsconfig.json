@@ -1,0 +1,52 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./src",
+    "paths": {
+      "@persona/*": ["*"],
+      "@shared/*": ["../shared/*"],
+      "@ml/*": ["../ml-service/src/*"]
+    },
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types",
+      "./src/types/ml-models"
+    ],
+    "types": [
+      "node",
+      "jest",
+      "tensorflow",
+      "pytorch"
+    ],
+    "strict": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "target": "es2020",
+    "module": "commonjs"
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "src/types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage"
+  ],
+  "references": [
+    {
+      "path": "../shared"
+    },
+    {
+      "path": "../ml-service"
+    }
+  ]
+}
