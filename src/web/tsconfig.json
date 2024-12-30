@@ -1,0 +1,83 @@
+{
+  "compilerOptions": {
+    // ECMAScript target version
+    "target": "es2017",
+    
+    // Standard library files to include
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    
+    // JavaScript support
+    "allowJs": true,
+    "skipLibCheck": true,
+    
+    // Type checking strictness
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    
+    // Module system configuration
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    
+    // React/JSX support
+    "jsx": "preserve",
+    
+    // Build optimization
+    "incremental": true,
+    
+    // Next.js plugin
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    
+    // Module resolution paths
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@utils/*": ["src/utils/*"],
+      "@services/*": ["src/services/*"],
+      "@store/*": ["src/store/*"],
+      "@types/*": ["src/types/*"],
+      "@constants/*": ["src/constants/*"],
+      "@config/*": ["src/config/*"],
+      "@lib/*": ["src/lib/*"],
+      "@features/*": ["src/features/*"],
+      "@layouts/*": ["src/layouts/*"],
+      "@assets/*": ["src/assets/*"],
+      "@styles/*": ["src/styles/*"],
+      "@api/*": ["src/api/*"]
+    }
+  },
+  
+  // Files to include in compilation
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  
+  // Files to exclude from compilation
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "coverage",
+    "dist",
+    ".next",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "cypress"
+  ]
+}
