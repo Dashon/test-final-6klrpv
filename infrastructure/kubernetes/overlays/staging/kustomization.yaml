@@ -1,0 +1,141 @@
+# Kustomization configuration for AI Travel Platform staging environment
+# Version: 1.0.0
+# Environment: Staging
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Target namespace for all resources
+namespace: ai-travel-platform-staging
+
+# Common metadata for all resources
+commonLabels:
+  environment: staging
+  managed-by: kustomize
+  app: ai-travel-platform
+  tier: staging
+  version: "1.0.0"
+  security-tier: platform
+  data-classification: internal
+
+# Common annotations for enhanced security and monitoring
+commonAnnotations:
+  platform.ai/environment: "staging"
+  platform.ai/version: "1.0.0"
+  platform.ai/team: "platform-engineering"
+  platform.ai/security-contact: "security@platform.ai"
+  security.platform.ai/service-mesh: "enabled"
+  monitoring.platform.ai/tracing: "enabled"
+  monitoring.platform.ai/prometheus: "enabled"
+  backup.platform.ai/enabled: "true"
+  security.platform.ai/pod-security: "restricted"
+  security.platform.ai/network-policy: "strict"
+
+# Base resources to be included
+resources:
+  - ../../base/namespace.yaml
+  - ../../base/configmap.yaml
+  - ../../base/storage.yaml
+  - ../../apps/api-gateway/deployment.yaml
+  - ../../apps/booking-service/deployment.yaml
+  - ../../apps/ml-service/deployment.yaml
+
+# Resource patches for staging environment
+patches:
+  # Common deployment patches for all services
+  - target:
+      kind: Deployment
+      name: ".*"
+    patch: |
+      spec:
+        replicas: 2
+        strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 0
+        template:
+          metadata:
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "8080"
+          spec:
+            containers:
+            - name: .*
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 512Mi
+                limits:
+                  cpu: 1000m
+                  memory: 1Gi
+              securityContext:
+                runAsNonRoot: true
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+            securityContext:
+              fsGroup: 1000
+              runAsUser: 1000
+              runAsGroup: 1000
+
+# ConfigMap generators for environment-specific configuration
+configMapGenerator:
+  - name: ai-travel-platform-config
+    behavior: merge
+    literals:
+      - ENVIRONMENT=staging
+      - NODE_ENV=staging
+      - LOG_LEVEL=info
+      - SERVICE_MESH_ENABLED=true
+      - TRACING_ENABLED=true
+      - MONITORING_ENABLED=true
+      - DB_CONNECTION_POOL_SIZE=5
+      - RATE_LIMIT_MAX_REQUESTS=500
+      - MAX_CONNECTIONS=5000
+      - MODEL_CACHE_SIZE=512
+      - REQUEST_TIMEOUT=15000
+
+# Image tag configuration for staging environment
+images:
+  - name: ai-travel-platform/api-gateway
+    newTag: staging
+  - name: ai-travel-platform/booking-service
+    newTag: staging
+  - name: ai-travel-platform/ml-service
+    newTag: staging
+
+# Resource quota for staging environment
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: staging-quota
+spec:
+  hard:
+    requests.cpu: "8"
+    requests.memory: 16Gi
+    limits.cpu: "16"
+    limits.memory: 32Gi
+    persistentvolumeclaims: "10"
+
+# Network policies for staging environment
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: staging-network-policy
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              environment: staging
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              environment: staging
