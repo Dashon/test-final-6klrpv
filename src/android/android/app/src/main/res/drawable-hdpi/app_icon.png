@@ -1,0 +1,43 @@
+Format: PNG (Portable Network Graphics)
+Dimensions: 72x72 pixels (72dp x 72dp at hdpi density)
+Color Space: sRGB with embedded ICC profile
+Transparency: Enabled (Alpha channel support)
+Target Density: hdpi (~240dpi)
+File Size Target: < 10KB
+
+Design Specifications:
+- Primary Color: #1A73E8 (Material Blue)
+- Secondary Color: #34A853 (Material Green)
+- Material Design Guidelines Compliant
+- Minimum Contrast Ratio: 4.5:1
+- Safe Zone: 1dp padding from all edges
+- Subtle depth effect for dimensional appearance
+- Launcher-optimized visibility
+- Transparency support for launcher theme adaptation
+
+Technical Requirements:
+- Format: 32-bit PNG with alpha channel
+- Color Depth: 24-bit color + 8-bit alpha
+- Compression: PNG optimal compression
+- No upscaling artifacts
+- Pixel-perfect rendering at 240dpi
+- Clean anti-aliasing on curves and edges
+- Optimized for Android 5.0+ (API 21+)
+
+Implementation Notes:
+1. Icon should be created at 72x72 pixels for hdpi density
+2. Maintain visual consistency with other density variants
+3. Ensure crisp edges and proper anti-aliasing
+4. Optimize file size while maintaining quality
+5. Test against both light and dark launcher backgrounds
+6. Verify proper scaling behavior across density ranges
+7. Include proper PNG metadata and color profile
+
+Quality Checklist:
+- [ ] Pixel-perfect at target size
+- [ ] Proper anti-aliasing
+- [ ] Color accuracy maintained
+- [ ] File size optimized
+- [ ] Safe zone respected
+- [ ] Launcher compatibility verified
+- [ ] Theme adaptation tested
