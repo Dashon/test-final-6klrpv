@@ -1,0 +1,61 @@
+platform :ios, '13.0'
+
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
+target 'AIEnhancedSocialTravelPlatform' do
+  config = use_native_modules!
+  use_frameworks!
+  use_react_native!(
+    :path => config[:reactNativePath],
+    :hermes_enabled => true,
+    :fabric_enabled => true
+  )
+
+  pod 'React-Core', :path => '../node_modules/react-native/', :subspecs => [
+    'Core',
+    'DevSupport',
+    'RCTActionSheet',
+    'RCTAnimation',
+    'RCTBlob',
+    'RCTImage',
+    'RCTLinking',
+    'RCTNetwork',
+    'RCTSettings',
+    'RCTText',
+    'RCTVibration'
+  ]
+
+  pod 'RNGestureHandler', :path => '../node_modules/react-native-gesture-handler'
+  pod 'RNReanimated', :path => '../node_modules/react-native-reanimated'
+  pod 'RNScreens', :path => '../node_modules/react-native-screens'
+  pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
+  pod 'react-native-safe-area-context', :path => '../node_modules/react-native-safe-area-context'
+  pod 'RNPermissions', :path => '../node_modules/react-native-permissions'
+  pod 'TouchID', :path => '../node_modules/react-native-touch-id'
+  pod 'RNFirebaseAnalytics', :path => '../node_modules/@react-native-firebase/analytics'
+  pod 'RNFirebaseCrashlytics', :path => '../node_modules/@react-native-firebase/crashlytics'
+  pod 'RNFirebasePerf', :path => '../node_modules/@react-native-firebase/perf'
+  pod 'RNCAsyncStorage', :path => '../node_modules/@react-native-async-storage/async-storage'
+  pod 'RNCNetInfo', :path => '../node_modules/@react-native-community/netinfo'
+  pod 'RNKeychain', :path => '../node_modules/react-native-keychain'
+  pod 'RNBiometrics', :path => '../node_modules/react-native-biometrics'
+
+  target 'AIEnhancedSocialTravelPlatformTests' do
+    inherit! :complete
+  end
+
+  post_install do |installer|
+    react_native_post_install(installer)
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+        config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+        config.build_settings['ENABLE_BITCODE'] = 'NO'
+        config.build_settings['OTHER_LDFLAGS'] = ['$(inherited)', '-ObjC']
+        config.build_settings['SWIFT_VERSION'] = '5.0'
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      end
+    end
+  end
+end
