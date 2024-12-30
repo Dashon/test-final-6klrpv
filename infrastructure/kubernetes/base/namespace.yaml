@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: ai-travel-platform
+      labels:
+        # Core platform labels
+        app: ai-travel-platform
+        environment: ${ENVIRONMENT}
+        managed-by: kustomize
+        
+        # Security and compliance labels
+        security-tier: platform
+        data-classification: internal
+        
+        # Operational labels
+        backup-policy: enabled
+        monitoring: enabled
+      
+      annotations:
+        # Platform metadata
+        platform.ai/description: "AI-Enhanced Social Travel Platform namespace"
+        platform.ai/version: "1.0.0"
+        platform.ai/team: "platform-engineering"
+        
+        # Security and compliance annotations
+        platform.ai/security-contact: "security@platform.ai"
+        platform.ai/compliance-level: "high"
+        platform.ai/pod-security: "restricted"
+        platform.ai/network-policy: "strict"
+        
+        # Operational annotations
+        platform.ai/backup-schedule: "daily"
+        platform.ai/resource-tier: "standard"
