@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Launch Screen Layout for AI-Enhanced Social Travel Platform
+  
+  Design System Implementation:
+  - Uses standardized dimensions (144dp for icon, 24dp for margins)
+  - Implements theme-aware colors for light/dark mode support
+  - Follows Material Design guidelines for spacing and elevation
+  
+  Accessibility Features:
+  - Proper content descriptions for screen readers
+  - RTL layout support through android:layoutDirection
+  - Sufficient touch target sizes
+  
+  Performance Optimizations:
+  - Minimal view hierarchy for fast inflation
+  - Hardware acceleration enabled by default
+  - Optimized image loading with proper scaling
+-->
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:gravity="center"
+    android:fitsSystemWindows="true"
+    android:layoutDirection="locale">
+
+    <!-- 
+      App Icon:
+      - Size: 144dp matches xxhdpi density for crisp rendering
+      - ScaleType: fitCenter for proper scaling across devices
+      - ContentDescription: Proper accessibility labeling
+    -->
+    <ImageView
+        android:id="@+id/launch_icon"
+        android:layout_width="144dp"
+        android:layout_height="144dp"
+        android:src="@drawable/app_icon"
+        android:scaleType="fitCenter"
+        android:contentDescription="@string/app_name"
+        android:importantForAccessibility="yes"/>
+
+    <!-- 
+      Progress Indicator:
+      - Indeterminate progress for loading feedback
+      - Theme-aware tinting using primary color
+      - Proper spacing from icon using Material metrics
+    -->
+    <ProgressBar
+        android:id="@+id/launch_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/launch_icon"
+        android:layout_marginTop="24dp"
+        android:indeterminateTint="@color/primary"
+        style="?android:progressBarStyleSmall"
+        android:importantForAccessibility="no"/>
+
+</RelativeLayout>
