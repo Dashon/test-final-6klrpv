@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Core App Information -->
+    <key>CFBundleDisplayName</key>
+    <string>AI Travel</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.aitravelplatform</string>
+    <key>CFBundleVersion</key>
+    <string>1.0.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.travel</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>MinimumOSVersion</key>
+    <string>13.0</string>
+    <key>UIRequiresFullScreen</key>
+    <true/>
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+
+    <!-- Privacy Permissions -->
+    <key>NSCameraUsageDescription</key>
+    <string>We need camera access to enable high-quality video consultations with travel professionals, allowing you to discuss travel plans face-to-face</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Microphone access is needed for clear audio during video consultations with travel professionals and voice chat features</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Your location helps us provide personalized travel recommendations and nearby points of interest through our AI-powered system</string>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Face ID provides a secure and convenient way to protect your travel plans and personal information</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Access to photos allows you to share travel memories and documents with your travel group and professionals</string>
+
+    <!-- Background Capabilities -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>audio</string>
+        <string>voip</string>
+        <string>fetch</string>
+        <string>remote-notification</string>
+    </array>
+
+    <!-- Device Requirements -->
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>armv7</string>
+        <string>arm64</string>
+    </array>
+
+    <!-- Interface Settings -->
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <true/>
+    <key>UIStatusBarStyle</key>
+    <string>UIStatusBarStyleDarkContent</string>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+
+    <!-- Custom Fonts -->
+    <key>UIAppFonts</key>
+    <array>
+        <string>PlayfairDisplay-Bold.ttf</string>
+        <string>PlayfairDisplay-Regular.ttf</string>
+        <string>Roboto-Bold.ttf</string>
+        <string>Roboto-Regular.ttf</string>
+    </array>
+
+    <!-- URL Schemes -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>aitravelplatform</string>
+            </array>
+            <key>CFBundleURLName</key>
+            <string>com.aitravelplatform</string>
+        </dict>
+    </array>
+
+    <!-- Security Settings -->
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
+</dict>
+</plist>
