@@ -1,0 +1,42 @@
+Font Details:
+- Family: Playfair Display
+- Weight: Regular (400)
+- Format: TrueType Font (.ttf)
+- License: Open Font License (OFL) 1.1
+- File Size: ~150KB
+
+Implementation Steps:
+1. Download the official PlayfairDisplay-Regular.ttf from Google Fonts
+2. Place the file at this exact path: src/ios/ios/Fonts/PlayfairDisplay-Regular.ttf
+3. Register in Info.plist:
+   <key>UIAppFonts</key>
+   <array>
+       <string>PlayfairDisplay-Regular.ttf</string>
+   </array>
+
+Usage:
+- Primary heading typography
+- Display text elements
+- Section titles
+- Feature headings
+- Navigation headers
+- Modal titles
+- Card headlines
+- Marketing content
+
+Performance Considerations:
+- Bundle Size: ~150KB
+- Loading Priority: High
+- Caching: Permanent
+- Optimization: Production-ready
+
+Accessibility Support:
+- Scaling: 12pt to 96pt
+- Screen Reader Compatible
+- Dynamic Type Support
+
+License Requirements:
+- Attribution Required
+- Redistribution Allowed
+- Commercial Use Permitted
+- Modifications Allowed
