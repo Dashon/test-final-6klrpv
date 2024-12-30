@@ -1,0 +1,131 @@
+# Development Environment Kustomization Configuration
+# Version: 1.0.0
+# Purpose: Customizes base Kubernetes resources for development environment with enhanced debugging and monitoring
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Development namespace configuration
+namespace: ai-travel-platform-dev
+
+# Common labels for all resources in development environment
+commonLabels:
+  environment: development
+  managed-by: kustomize
+  debug-enabled: "true"
+  monitoring-level: verbose
+  version: "1.0.0"
+  tier: development
+
+# Development-specific annotations
+commonAnnotations:
+  platform.ai/environment: development
+  platform.ai/version: "1.0.0"
+  platform.ai/debug-mode: enabled
+  platform.ai/monitoring: enhanced
+  platform.ai/last-updated: "${CURRENT_DATE}"
+  platform.ai/maintainer: "platform-team@company.com"
+
+# Base resources to be customized
+resources:
+  - ../../base/namespace.yaml
+  - ../../base/configmap.yaml
+  - ../../base/secrets.yaml
+  - ../../apps/api-gateway/deployment.yaml
+  - ../../apps/api-gateway/service.yaml
+  - ../../apps/api-gateway/ingress.yaml
+
+# Development-specific patches
+patches:
+  # API Gateway development configuration
+  - target:
+      kind: Deployment
+      name: api-gateway
+    patch: |
+      spec:
+        replicas: 1  # Single replica for development
+        template:
+          spec:
+            containers:
+            - name: api-gateway
+              resources:
+                requests:
+                  cpu: 200m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+              env:
+              - name: DEBUG_MODE
+                value: "true"
+              - name: VERBOSE_LOGGING
+                value: "true"
+              - name: NODE_ENV
+                value: "development"
+              volumeMounts:
+              - name: debug-volume
+                mountPath: /app/debug
+            volumes:
+            - name: debug-volume
+              emptyDir: {}
+
+# Development ConfigMap generator
+configMapGenerator:
+  - name: development-config
+    behavior: merge
+    literals:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+      - SERVICE_MESH_ENABLED=false
+      - TRACING_ENABLED=true
+      - DEBUG_ENDPOINTS_ENABLED=true
+      - PROFILING_ENABLED=true
+      - MAX_REQUEST_SIZE=50mb
+      - REQUEST_TIMEOUT=60000
+      - HEALTH_CHECK_INTERVAL=10s
+      - WEBSOCKET_LOGGING=verbose
+
+# Development secrets generator
+secretGenerator:
+  - name: development-secrets
+    behavior: merge
+    envs:
+      - development.env
+    files:
+      - auth-keys/dev-private.key
+      - auth-keys/dev-public.key
+
+# Image customization for development
+images:
+  - name: kong
+    newTag: 3.3-alpine-dev
+  - name: api-gateway
+    newName: ai-travel-platform/api-gateway
+    newTag: dev-latest
+
+# Development-specific configurations
+vars:
+  - name: ENVIRONMENT
+    objref:
+      kind: ConfigMap
+      name: development-config
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.NODE_ENV
+
+# Resource transformers for development
+transformers:
+  - |-
+    apiVersion: builtin
+    kind: LabelTransformer
+    metadata:
+      name: development-labels
+    labels:
+      debug: enabled
+      environment: development
+    fieldSpecs:
+    - path: metadata/labels
+      create: true
+
+# Build options
+buildMetadata: [originAnnotations, transformerAnnotations]
