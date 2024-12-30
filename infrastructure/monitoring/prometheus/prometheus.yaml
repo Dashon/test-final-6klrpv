@@ -1,0 +1,132 @@
+# Prometheus Server Configuration
+# Version: 2.45.0
+# Purpose: Production-grade monitoring configuration for AI-Enhanced Social Travel Platform
+# Dependencies: prom/prometheus:v2.45.0
+
+global:
+  # Scrape and evaluation intervals optimized for real-time monitoring
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  
+  # Platform-specific external labels for metric identification
+  external_labels:
+    environment: production
+    cluster: ai-travel-platform
+    region: ${AWS_REGION}
+    platform_version: v1.0
+
+# Import alerting and recording rules
+rule_files:
+  - "rules.yaml"
+
+# Scrape configurations for various platform components
+scrape_configs:
+  # Kubernetes pod discovery for auto-scaling metrics
+  - job_name: kubernetes-pods
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: [production, staging]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+
+  # API Gateway monitoring for latency tracking
+  - job_name: api-gateway
+    metrics_path: /metrics
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['api-gateway:8080']
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: http_request_duration_seconds.*
+        action: keep
+
+  # Social service monitoring for chat latency
+  - job_name: social-service
+    metrics_path: /metrics
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['social-service:8080']
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: websocket_message_duration_seconds.*
+        action: keep
+
+  # ML service monitoring for inference latency
+  - job_name: ml-service
+    metrics_path: /metrics
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['ml-service:8080']
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: ml_inference_duration_seconds.*
+        action: keep
+
+  # Node exporter for system metrics
+  - job_name: node-exporter
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+      timeout: 5s
+      api_version: v2
+
+# TSDB storage configuration optimized for 15-day retention
+storage:
+  tsdb:
+    retention_time: 15d
+    retention_size: 50GB
+    min_block_duration: 2h
+    max_block_duration: 24h
+    no_lockfile: false
+
+# Remote write configuration for long-term storage with Thanos
+remote_write:
+  - url: http://thanos-receive:19291/api/v1/receive
+    queue_config:
+      capacity: 2500
+      max_shards: 200
+      max_samples_per_send: 500
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: up|http_request_duration_seconds.*|websocket_message_duration_seconds.*|ml_inference_duration_seconds.*
+        action: keep
+
+# Remote read configuration for high-availability
+remote_read:
+  - url: http://thanos-query:19192/api/v1/read
+    read_recent: true
+    required_matchers:
+      environment: production
+
+# Web interface configuration
+web:
+  console:
+    templates: /etc/prometheus/consoles
+    libraries: /etc/prometheus/console_libraries
+  page_title: AI Travel Platform Monitoring
+  external_url: https://monitoring.ai-travel-platform.com
+
+# Query performance tuning
+query:
+  max_samples: 50000000
+  timeout: 2m
+  max_concurrency: 20
