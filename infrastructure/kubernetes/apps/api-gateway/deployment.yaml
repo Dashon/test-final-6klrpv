@@ -1,0 +1,173 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: ai-travel-platform
+  labels:
+    app: ai-travel-platform
+    component: api-gateway
+    security-tier: edge
+  annotations:
+    security.company.com/reviewed: "true"
+    security.company.com/last-audit: "2024-01-20"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: ai-travel-platform
+      component: api-gateway
+      security-tier: edge
+  template:
+    metadata:
+      labels:
+        app: ai-travel-platform
+        component: api-gateway
+        security-tier: edge
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+        security.alpha.kubernetes.io/sysctls: "net.ipv4.tcp_syncookies=1,net.ipv4.tcp_max_syn_backlog=8192"
+        container.apparmor.security.beta.kubernetes.io/kong: "runtime/default"
+        checksum/config: "${CONFIG_CHECKSUM}"
+    spec:
+      # Enhanced Pod Security Context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: kong
+        # Kong Enterprise version 3.3.1
+        image: kong:3.3.1
+        imagePullPolicy: IfNotPresent
+        # Container Security Context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+            add: ["NET_BIND_SERVICE"]
+        ports:
+        - name: proxy
+          containerPort: 8000
+          protocol: TCP
+        - name: proxy-ssl
+          containerPort: 8443
+          protocol: TCP
+        - name: admin
+          containerPort: 8001
+          protocol: TCP
+        - name: admin-ssl
+          containerPort: 8444
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        env:
+        - name: KONG_DATABASE
+          value: "off"
+        - name: KONG_DECLARATIVE_CONFIG
+          value: "/kong/kong.yml"
+        - name: KONG_PROXY_ACCESS_LOG
+          value: "/dev/stdout"
+        - name: KONG_ADMIN_ACCESS_LOG
+          value: "/dev/stdout"
+        - name: KONG_PROXY_ERROR_LOG
+          value: "/dev/stderr"
+        - name: KONG_ADMIN_ERROR_LOG
+          value: "/dev/stderr"
+        - name: KONG_PLUGINS
+          value: "bundled,rate-limiting,cors,jwt,oauth2,prometheus,request-transformer,response-transformer,ip-restriction"
+        - name: KONG_SSL_CIPHER_SUITE
+          value: "modern"
+        - name: KONG_PROXY_LISTEN
+          value: "0.0.0.0:8000, 0.0.0.0:8443 ssl http2"
+        - name: KONG_ADMIN_LISTEN
+          value: "127.0.0.1:8001, 127.0.0.1:8444 ssl"
+        - name: KONG_NGINX_WORKER_PROCESSES
+          value: "auto"
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "2"
+            memory: "2Gi"
+        livenessProbe:
+          httpGet:
+            path: /status
+            port: 8001
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /status
+            port: 8001
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /status
+            port: 8001
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 30
+        volumeMounts:
+        - name: kong-config
+          mountPath: "/kong/kong.yml"
+          subPath: "kong.yml"
+          readOnly: true
+        - name: tmp
+          mountPath: "/tmp"
+      volumes:
+      - name: kong-config
+        configMap:
+          name: kong-config
+      - name: tmp
+        emptyDir: {}
+      # Pod Affinity Rules for High Availability
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: ai-travel-platform
+                  component: api-gateway
+              topologyKey: "kubernetes.io/hostname"
+      # Node Affinity for Performance
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/edge
+                operator: Exists
+      # Tolerations for Edge Nodes
+      tolerations:
+      - key: "edge-gateway"
+        operator: "Exists"
+        effect: "NoSchedule"
+      # Service Account for RBAC
+      serviceAccountName: kong-serviceaccount
+      # Pod Termination Grace Period
+      terminationGracePeriodSeconds: 60
