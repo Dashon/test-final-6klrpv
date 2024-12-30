@@ -1,0 +1,211 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/android/**'
+      - '.github/workflows/android.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/android/**'
+      - '.github/workflows/android.yml'
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+  actions: read
+  id-token: write
+
+# Ensure only one workflow runs per ref/PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '11'
+  NODE_VERSION: '18.x'
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2 -Xmx4g -XX:+HeapDumpOnOutOfMemoryError'
+  GRADLE_BUILD_ACTION_CACHE_DEBUG_ENABLED: true
+  NODE_OPTIONS: '--max_old_space_size=4096'
+  GRADLE_USER_HOME: ${{ github.workspace }}/.gradle
+
+jobs:
+  validate:
+    name: Validate and Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'src/android/package-lock.json'
+      
+      - name: Cache Gradle Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      
+      - name: Install Dependencies
+        working-directory: src/android
+        run: |
+          npm ci --no-audit
+          ./android/gradlew dependencies
+      
+      - name: Type Check
+        working-directory: src/android
+        run: npm run type-check
+      
+      - name: Lint
+        working-directory: src/android
+        run: npm run lint
+      
+      - name: Run Unit Tests
+        working-directory: src/android
+        run: |
+          npm run test -- --maxWorkers=2 --coverage
+      
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results
+          path: src/android/coverage
+          retention-days: 14
+
+  build:
+    name: Build Release APK
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'src/android/package-lock.json'
+      
+      - name: Cache Gradle Build
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            src/android/android/app/build
+          key: ${{ runner.os }}-gradle-build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-build-
+      
+      - name: Install Dependencies
+        working-directory: src/android
+        run: |
+          npm ci --no-audit --prefer-offline
+          ./android/gradlew dependencies
+      
+      - name: Setup Release Keystore
+        working-directory: src/android/android/app
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 -d > release.keystore
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      
+      - name: Build Release APK
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: assembleRelease bundleRelease
+          build-root-directory: src/android/android
+          gradle-home-cache-cleanup: true
+      
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-apk
+          path: |
+            src/android/android/app/build/outputs/apk/release/*.apk
+            src/android/android/app/build/outputs/bundle/release/*.aab
+          retention-days: 14
+      
+      - name: Upload Build Reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-reports
+          path: |
+            src/android/android/app/build/reports
+            src/android/android/app/build/outputs/mapping
+          retention-days: 7
+
+  e2e-test:
+    name: E2E Tests
+    needs: build
+    runs-on: macos-latest
+    timeout-minutes: 45
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'src/android/package-lock.json'
+      
+      - name: Install Dependencies
+        working-directory: src/android
+        run: npm ci --no-audit
+      
+      - name: Build E2E Tests
+        working-directory: src/android
+        run: npm run e2e:build
+      
+      - name: Run E2E Tests
+        working-directory: src/android
+        run: npm run e2e:test
+      
+      - name: Upload E2E Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-test-results
+          path: src/android/e2e/artifacts
+          retention-days: 14
