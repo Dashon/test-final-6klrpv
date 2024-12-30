@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:AITravelPlatform.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Pods/Pods.xcodeproj">
+   </FileRef>
+   <Group
+      location = "container:"
+      name = "Workspace Settings">
+      <FileRef
+         location = "group:AITravelPlatform.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings">
+      </FileRef>
+      <FileRef
+         location = "group:AITravelPlatform.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist">
+      </FileRef>
+   </Group>
+</Workspace>
