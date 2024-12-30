@@ -1,0 +1,142 @@
+# Dependabot configuration version 2
+version: 2
+
+# Define update configurations for different package ecosystems
+updates:
+  # Backend Node.js dependencies
+  - package-ecosystem: "npm"
+    directory: "/src/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    versioning-strategy: "auto"
+    labels:
+      - "dependencies"
+      - "backend"
+    reviewers:
+      - "backend-team"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      backend-dependencies:
+        patterns:
+          - "*"
+
+  # Web application React dependencies
+  - package-ecosystem: "npm"
+    directory: "/src/web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    versioning-strategy: "auto"
+    labels:
+      - "dependencies"
+      - "frontend"
+      - "web"
+    reviewers:
+      - "frontend-team"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      web-dependencies:
+        patterns:
+          - "*"
+
+  # iOS React Native dependencies
+  - package-ecosystem: "npm"
+    directory: "/src/ios"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    versioning-strategy: "auto"
+    labels:
+      - "dependencies"
+      - "mobile"
+      - "ios"
+    reviewers:
+      - "mobile-team"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      ios-dependencies:
+        patterns:
+          - "*"
+
+  # Android React Native dependencies
+  - package-ecosystem: "npm"
+    directory: "/src/android"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    versioning-strategy: "auto"
+    labels:
+      - "dependencies"
+      - "mobile"
+      - "android"
+    reviewers:
+      - "mobile-team"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      android-dependencies:
+        patterns:
+          - "*"
+
+  # GitHub Actions workflow dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "ci-cd"
+    reviewers:
+      - "devops-team"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/src/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "docker"
+    reviewers:
+      - "devops-team"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      docker-dependencies:
+        patterns:
+          - "*"
+
+# Security settings
+security:
+  vulnerability_alerts: true
+  security_updates: true
