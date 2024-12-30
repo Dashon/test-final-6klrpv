@@ -1,0 +1,66 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+// Project name definition
+rootProject.name = "AITravelPlatform"
+
+// Define the path to React Native node modules
+def REACT_NATIVE_NODE_MODULES_DIR = file("../node_modules")
+if (!REACT_NATIVE_NODE_MODULES_DIR.exists()) {
+    throw new GradleException(
+        "Could not find node_modules directory.\n" +
+        "Make sure to run 'yarn install' or 'npm install' before building the project."
+    )
+}
+
+// Include the app project
+include ':app'
+
+// Apply React Native package configuration
+apply from: file("${REACT_NATIVE_NODE_MODULES_DIR}/@react-native-community/cli-platform-android/native_modules.gradle")
+applyNativeModulesSettingsGradle(settings)
+
+// Enable build cache for better performance
+buildCache {
+    local {
+        enabled = true
+        directory = new File(rootDir, '.gradle/buildCache')
+    }
+}
+
+// Configure dependency resolution strategy
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://www.jitpack.io" }
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+    }
+    versionCatalogs {
+        libs {
+            version('react-native', '0.71.x')
+            version('gradle-plugin', '7.3.1')
+            version('kotlin', '1.7.20')
+        }
+    }
+}
+
+// Enable parallel execution for faster builds
+gradle.startParameter.setParallelProjectExecutionEnabled(true)
+
+// Enable configuration cache
+settings.enableConfigurationCache()
+
+// Fail on version conflicts to ensure consistent dependencies
+configurations.all {
+    resolutionStrategy {
+        failOnVersionConflict()
+        preferProjectModules()
+    }
+}
