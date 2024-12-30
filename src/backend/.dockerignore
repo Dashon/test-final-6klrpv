@@ -1,0 +1,70 @@
+# Dependencies
+node_modules
+package-lock.json
+yarn.lock
+
+# Build Artifacts
+dist
+build
+.cache
+
+# Development Files
+.vscode
+.idea
+tests
+**/*.test.ts
+**/*.spec.ts
+coverage
+
+# Logs and Debugging
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Source Control
+.git
+.gitignore
+
+# Security Sensitive
+.env
+.env.*
+**/*.key
+**/*.pem
+
+# Documentation
+*.md
+docs
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+
+# Exceptions - Files to include despite matching above patterns
+!.env.example
+!docs/api
+
+# Development Environment
+.eslintrc
+.prettierrc
+.babelrc
+jest.config.js
+tsconfig.json
+
+# Temporary Files
+.DS_Store
+*.swp
+*.swo
+tmp/
+temp/
+
+# IDE and Editor Files
+*.sublime-*
+*.code-workspace
+.settings/
+.project
+.classpath
+
+# System Files
+Thumbs.db
+desktop.ini
