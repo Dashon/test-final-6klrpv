@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Application Identity -->
+    <string name="app_name">AI Travel Platform</string>
+
+    <!-- Authentication Screens -->
+    <string name="login_title">Welcome Back</string>
+    <string name="register_title">Create Account</string>
+    <string name="biometric_prompt">Login with biometrics</string>
+
+    <!-- Main Navigation -->
+    <string name="dashboard_title">My Travel Dashboard</string>
+    <string name="persona_selection_title">Choose Your Travel Persona</string>
+    <string name="chat_title">Travel Chat</string>
+    <string name="booking_title">Book Your Trip</string>
+    <string name="payment_title">Payment Details</string>
+    <string name="itinerary_title">Your Itinerary</string>
+
+    <!-- Permission Rationales -->
+    <string name="location_permission_rationale">Location access is needed for personalized travel recommendations</string>
+    <string name="camera_permission_rationale">Camera access is needed for document scanning and profile photos</string>
+    <string name="storage_permission_rationale">Storage access is needed for saving travel documents</string>
+
+    <!-- Success Messages -->
+    <string name="success_booking">Booking confirmed successfully!</string>
+
+    <!-- Error Messages -->
+    <string name="error_network">Network connection error. Please try again.</string>
+    <string name="error_auth">Authentication failed. Please check your credentials.</string>
+    <string name="error_booking">Booking failed. Please try again.</string>
+</resources>
