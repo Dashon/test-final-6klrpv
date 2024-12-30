@@ -1,0 +1,187 @@
+# Fastfile for AI Travel Platform Android App
+# Version: 2.212.2
+# Purpose: Defines automated build, test and deployment lanes with security controls
+
+# Import required fastlane plugins
+fastlane_require 'fastlane-plugin-firebase_app_distribution'
+
+# Import app package name from Appfile
+import_from_git(
+  url: "src/android/fastlane/Appfile",
+  branch: "main"
+)
+
+# Default platform configuration
+default_platform(:android)
+
+# Environment validation and security checks
+def check_environment
+  UI.user_error!("PLAY_STORE_JSON_KEY_FILE not set") unless ENV['PLAY_STORE_JSON_KEY_FILE']
+  UI.user_error!("FIREBASE_APP_ID not set for staging") unless ENV['FIREBASE_APP_ID']
+  UI.user_error!("SLACK_WEBHOOK_URL not set") unless ENV['SLACK_WEBHOOK_URL']
+  
+  # Validate keystore presence and permissions
+  keystore_path = File.join(Dir.pwd, "../android/app/release.keystore")
+  UI.user_error!("Release keystore not found") unless File.exist?(keystore_path)
+  UI.user_error!("Keystore permissions too open") if File.stat(keystore_path).mode > 0600
+  
+  # Verify gradle configuration
+  gradle_path = "./gradlew"
+  UI.user_error!("Gradle wrapper not found") unless File.exist?(gradle_path)
+  
+  true
+end
+
+# Version code management
+def increment_version_code
+  path = '../android/app/build.gradle'
+  re = /versionCode\s+(\d+)/
+  
+  s = File.read(path)
+  s[re, 1] = (s[re, 1].to_i + 1).to_s
+  
+  File.write(path, s)
+  
+  if ENV['CI']
+    sh "git add #{path}"
+    sh "git commit -m 'chore: Bump versionCode [skip ci]'"
+  end
+  
+  s[re, 1].to_i
+end
+
+platform :android do
+  # Lane for running tests and static analysis
+  desc "Run test suite"
+  lane :test do
+    gradle(task: "clean")
+    
+    # Run unit tests
+    gradle(
+      task: "test",
+      flags: "--stacktrace"
+    )
+    
+    # Static analysis
+    gradle(
+      task: "lint",
+      flags: "--stacktrace"
+    )
+    
+    # Code style checks
+    gradle(
+      task: "ktlintCheck",
+      flags: "--stacktrace"
+    )
+    
+    # Dependency security scan
+    gradle(
+      task: "dependencyCheckAnalyze",
+      flags: "--stacktrace"
+    )
+  end
+
+  # Lane for staging builds
+  desc "Build and distribute staging app"
+  lane :build_staging do
+    check_environment
+    
+    # Increment version code
+    version_code = increment_version_code
+    
+    gradle(task: "clean")
+    
+    # Build staging variant
+    gradle(
+      task: "assembleStagingRelease",
+      flags: "--stacktrace",
+      properties: {
+        "android.injected.signing.store.file" => "../android/app/release.keystore",
+        "android.injected.signing.store.password" => ENV['KEYSTORE_PASSWORD'],
+        "android.injected.signing.key.alias" => ENV['KEY_ALIAS'],
+        "android.injected.signing.key.password" => ENV['KEY_PASSWORD']
+      }
+    )
+    
+    # Verify build artifact
+    apk_path = lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+    UI.user_error!("APK not found at #{apk_path}") unless File.exist?(apk_path)
+    
+    # Upload to Firebase
+    firebase_app_distribution(
+      app: ENV['FIREBASE_APP_ID'],
+      apk_path: apk_path,
+      groups: "qa-team",
+      release_notes: "Staging build #{version_code}"
+    )
+    
+    # Archive artifacts
+    sh "mkdir -p builds/staging"
+    sh "cp #{apk_path} builds/staging/ai-travel-#{version_code}.apk"
+    
+    # Notify team
+    slack(
+      message: "Staging build #{version_code} deployed to Firebase",
+      success: true,
+      webhook: ENV['SLACK_WEBHOOK_URL']
+    )
+  end
+
+  # Lane for production deployment
+  desc "Deploy to Play Store production"
+  lane :deploy_production do
+    check_environment
+    
+    # Increment version code
+    version_code = increment_version_code
+    
+    gradle(task: "clean")
+    
+    # Build release bundle
+    gradle(
+      task: "bundleRelease",
+      flags: "--stacktrace",
+      properties: {
+        "android.injected.signing.store.file" => "../android/app/release.keystore",
+        "android.injected.signing.store.password" => ENV['KEYSTORE_PASSWORD'],
+        "android.injected.signing.key.alias" => ENV['KEY_ALIAS'],
+        "android.injected.signing.key.password" => ENV['KEY_PASSWORD']
+      }
+    )
+    
+    # Verify bundle
+    bundle_path = lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]
+    UI.user_error!("Bundle not found at #{bundle_path}") unless File.exist?(bundle_path)
+    
+    # Upload to Play Store
+    upload_to_play_store(
+      track: 'production',
+      aab: bundle_path,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      release_status: 'completed',
+      rollout: '0.1' # 10% staged rollout
+    )
+    
+    # Tag release
+    sh "git tag -a v#{version_code} -m 'Release #{version_code}'"
+    sh "git push origin v#{version_code}"
+    
+    # Notify team
+    slack(
+      message: "Production v#{version_code} deployed to Play Store (10% rollout)",
+      success: true,
+      webhook: ENV['SLACK_WEBHOOK_URL']
+    )
+  end
+
+  # Error handling for all lanes
+  error do |lane, exception|
+    slack(
+      message: "❌ #{lane} failed: #{exception.message}",
+      success: false,
+      webhook: ENV['SLACK_WEBHOOK_URL']
+    )
+  end
+end
