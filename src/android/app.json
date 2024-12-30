@@ -1,0 +1,43 @@
+{
+  "name": "AITravelPlatform",
+  "displayName": "AI Travel Platform",
+  "version": "1.0.0",
+  "build": {
+    "appId": "com.aitravelplatform",
+    "androidVersionCode": 1
+  },
+  "orientation": "portrait",
+  "icon": "./android/app/src/main/res/drawable/app_icon.png",
+  "splash": {
+    "image": "./android/app/src/main/res/drawable/launch_screen.xml",
+    "backgroundColor": "#FFFFFF",
+    "resizeMode": "contain"
+  },
+  "updates": {
+    "enabled": true,
+    "checkAutomatically": "ON_LOAD",
+    "fallbackToCacheTimeout": 30000
+  },
+  "assetBundlePatterns": [
+    "assets/fonts/*",
+    "assets/images/*"
+  ],
+  "android": {
+    "adaptiveIcon": {
+      "foregroundImage": "./android/app/src/main/res/drawable/app_icon.png",
+      "backgroundColor": "#FFFFFF"
+    },
+    "permissions": [
+      "ACCESS_FINE_LOCATION",
+      "ACCESS_COARSE_LOCATION",
+      "CAMERA",
+      "USE_BIOMETRIC",
+      "INTERNET",
+      "SYSTEM_ALERT_WINDOW",
+      "VIBRATE"
+    ],
+    "package": "com.aitravelplatform",
+    "versionCode": 1,
+    "googleServicesFile": "./android/app/google-services.json"
+  }
+}
