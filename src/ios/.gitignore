@@ -1,0 +1,95 @@
+# Dependencies
+node_modules/
+ios/Pods/
+yarn.lock
+package-lock.json
+ios/Podfile.lock
+ios/Manifest.lock
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+
+# Build artifacts
+build/
+ios/build/
+ios/DerivedData/
+*.hmap
+*.ipa
+*.xcarchive
+*.app.dSYM.zip
+*.app
+*.dSYM
+main.jsbundle
+main.jsbundle.map
+vendor/bundle/
+
+# IDE and editor files
+.idea/
+*.swp
+*.swo
+.vscode/
+xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.playground
+timeline.xctimeline
+playground.xcworkspace
+.history/
+
+# System files
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment and configuration
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+.env*.local
+*.env
+config.json
+secrets.json
+
+# Testing artifacts
+coverage/
+__snapshots__/
+*.snap
+jest-test-results.json
+test-report.xml
+ios/fastlane/report.xml
+ios/fastlane/Preview.html
+ios/fastlane/screenshots/**/*.png
+ios/fastlane/test_output
+
+# Cache directories
+.eslintcache
+.babel.json
+ios/Index/
+ios/.cache/
+.jest/
+ios/Rome/
+.bundle/
+vendor/
+ios/vendor/
+tmp/
+
+# Security and credentials
+*.keystore
+*.jks
+*.p12
+*.key
+*.mobileprovision
+ios/GoogleService-Info.plist
+ios/AuthKey_*.p8
+fastlane/artifacts/
+fastlane/credentials/
