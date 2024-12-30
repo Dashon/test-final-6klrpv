@@ -1,0 +1,187 @@
+name: iOS Build & Deploy
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/ios/**'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/ios/**'
+  release:
+    types: [created]
+
+# Ensure concurrent builds don't interfere with each other
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Global environment configuration
+  NODE_ENV: production
+  DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+  DEVELOPER_APP_ID: ${{ secrets.APPLE_DEVELOPER_APP_ID }}
+  PROVISIONING_PROFILE_SPECIFIER: ${{ secrets.APPLE_PROVISIONING_PROFILE_SPECIFIER }}
+  CODE_SIGNING_IDENTITY: ${{ secrets.APPLE_CODE_SIGNING_IDENTITY }}
+  MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+  FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
+  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: macos-latest
+    environment: production
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+          cache-dependency-path: src/ios/package-lock.json
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+
+      # Smart caching for faster builds
+      - name: Cache Node Modules
+        uses: actions/cache@v3
+        id: node-cache
+        with:
+          path: src/ios/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('src/ios/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-
+
+      - name: Cache Pods
+        uses: actions/cache@v3
+        id: pods-cache
+        with:
+          path: src/ios/Pods
+          key: pods-${{ runner.os }}-${{ hashFiles('src/ios/Podfile.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      - name: Install Dependencies
+        if: steps.node-cache.outputs.cache-hit != 'true'
+        run: |
+          cd src/ios
+          npm ci
+
+      - name: Install CocoaPods
+        if: steps.pods-cache.outputs.cache-hit != 'true'
+        run: |
+          cd src/ios
+          pod install
+
+      - name: Type Check
+        run: |
+          cd src/ios
+          npm run type-check
+
+      - name: Lint
+        run: |
+          cd src/ios
+          npm run lint -- --max-warnings 0
+
+      - name: Run Unit Tests
+        run: |
+          cd src/ios
+          npm run test -- --coverage --maxWorkers=2 --forceExit
+
+      - name: Build iOS App
+        run: |
+          cd src/ios
+          xcodebuild -workspace AITravelPlatform.xcworkspace \
+            -scheme AITravelPlatform \
+            -configuration Release \
+            -destination generic/platform=iOS \
+            -allowProvisioningUpdates \
+            CODE_SIGN_IDENTITY="${CODE_SIGNING_IDENTITY}" \
+            PROVISIONING_PROFILE_SPECIFIER="${PROVISIONING_PROFILE_SPECIFIER}" \
+            DEVELOPMENT_TEAM="${APPLE_TEAM_ID}" \
+            clean build
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-build
+          path: |
+            src/ios/build/Release-iphoneos/*.app
+            src/ios/build/Release-iphoneos/*.dSYM
+          retention-days: 5
+
+  deploy:
+    name: Deploy
+    needs: build-and-test
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main'
+    runs-on: macos-latest
+    environment: production
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ios-build
+          path: artifacts
+
+      - name: Setup Ruby for Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+
+      - name: Setup Provisioning Profiles
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo -n "${{ secrets.PROVISIONING_PROFILE_DATA }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+
+      - name: Deploy to TestFlight
+        env:
+          FASTLANE_SESSION: ${{ secrets.FASTLANE_SESSION }}
+        run: |
+          cd src/ios
+          fastlane beta \
+            api_key:"${{ secrets.APPSTORE_API_KEY }}" \
+            api_key_id:"${{ secrets.APPSTORE_API_KEY_ID }}" \
+            api_key_issuer_id:"${{ secrets.APPSTORE_API_ISSUER_ID }}" \
+            team_id:"${APPLE_TEAM_ID}" \
+            changelog:"${{ github.event.release.body || 'Bug fixes and improvements' }}"
+
+      - name: Deploy to App Store
+        if: github.event_name == 'release'
+        env:
+          FASTLANE_SESSION: ${{ secrets.FASTLANE_SESSION }}
+        run: |
+          cd src/ios
+          fastlane release \
+            api_key:"${{ secrets.APPSTORE_API_KEY }}" \
+            api_key_id:"${{ secrets.APPSTORE_API_KEY_ID }}" \
+            api_key_issuer_id:"${{ secrets.APPSTORE_API_ISSUER_ID }}" \
+            team_id:"${APPLE_TEAM_ID}" \
+            submission_information:"Automated deployment via CI/CD pipeline"
+
+      - name: Notify Team
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
