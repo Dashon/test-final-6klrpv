@@ -1,0 +1,12 @@
+# Fastlane Android Appfile
+# Version: 2.212.2
+# Purpose: Configures app-specific metadata and credentials for automated Android app deployment
+
+# Play Store service account credentials file path from environment variable
+# This follows security best practices by not hardcoding sensitive credentials
+# Credentials should be rotated every 90 days per security policy
+json_key_file(ENV['PLAY_STORE_JSON_KEY_FILE'])
+
+# Android application package identifier for Play Store deployment
+# This must match the applicationId in build.gradle
+package_name("com.aitravelplatform")
