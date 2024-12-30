@@ -1,0 +1,30 @@
+```
+
+Important Implementation Notes:
+
+1. This is a binary WOFF2 font file that should be obtained from Google Fonts and optimized for web use. The actual binary content cannot be represented in text format here.
+
+2. To implement this in your project:
+
+   a. Download the Roboto Regular font from Google Fonts (version specified in imports: regular)
+   b. Convert/optimize it to WOFF2 format using a tool like `google-webfonts-helper` or `fonttools`
+   c. Place the binary file at the specified path: `src/web/public/assets/fonts/Roboto-Regular.woff2`
+
+3. The font file should be referenced in your CSS using @font-face declaration:
+
+```css
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/Roboto-Regular.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+```
+
+4. Performance Considerations:
+   - The WOFF2 format provides optimal compression (30-50% better than WOFF)
+   - File should be preloaded for critical UI rendering:
+   ```html
+   <link rel="preload" href="/assets/fonts/Roboto-Regular.woff2" as="font" type="font/woff2" crossorigin>
