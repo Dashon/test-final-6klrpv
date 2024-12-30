@@ -1,0 +1,76 @@
+# These owners will be the default owners for everything in
+# the repository unless a later match takes precedence
+* @platform-leads
+
+# Backend service ownership
+/src/backend/ @backend-team @security-team
+/src/backend/ml-service/ @ml-team @backend-team
+/src/backend/api-gateway/ @backend-team @security-team
+/src/backend/booking-service/ @backend-team @security-team
+/src/backend/persona-service/ @backend-team @ml-team
+/src/backend/professional-service/ @backend-team @security-team
+/src/backend/social-service/ @backend-team @security-team
+/src/backend/shared/ @backend-team
+
+# Mobile app ownership
+/src/ios/ @mobile-team @security-team
+/src/android/ @mobile-team @security-team
+
+# Web application ownership
+/src/web/ @frontend-team @security-team
+/src/web/src/components/ @frontend-team
+/src/web/src/config/ @frontend-team @security-team
+/src/web/src/constants/ @frontend-team @security-team
+
+# Infrastructure and deployment
+/infrastructure/ @devops-team @security-team
+/infrastructure/kubernetes/ @devops-team @security-team
+/infrastructure/terraform/ @devops-team @security-team
+
+# CI/CD workflows
+/.github/workflows/ @devops-team @security-team
+
+# Security-sensitive files requiring security team review
+**/auth.* @security-team
+**/security.* @security-team
+**/payment.* @security-team @backend-team
+**/secrets.* @security-team @devops-team
+**/encryption.* @security-team
+
+# Database schemas and migrations
+**/database/ @database-team @backend-team
+**/migrations/ @database-team @backend-team
+**/schema.* @database-team @backend-team
+
+# Test files
+**/tests/ @qa-team
+**/test/ @qa-team
+**/*.test.* @qa-team
+**/*.spec.* @qa-team
+
+# Documentation
+/docs/ @platform-leads @technical-writers
+*.md @technical-writers
+
+# Package dependencies
+package.json @platform-leads @security-team
+package-lock.json @platform-leads @security-team
+yarn.lock @platform-leads @security-team
+
+# Configuration files
+*.config.js @platform-leads @security-team
+*.config.ts @platform-leads @security-team
+.env.* @security-team @devops-team
+
+# Machine Learning models and training data
+/src/backend/ml-service/models/ @ml-team
+/src/backend/ml-service/training/ @ml-team
+/src/backend/ml-service/data/ @ml-team
+
+# API specifications
+/src/backend/api-gateway/openapi/ @backend-team @api-team
+/src/backend/api-gateway/swagger/ @backend-team @api-team
+
+# Monitoring and observability
+/src/backend/monitoring/ @devops-team @sre-team
+/infrastructure/monitoring/ @devops-team @sre-team
