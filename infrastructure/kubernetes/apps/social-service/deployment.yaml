@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: social-service
+  namespace: ai-travel-platform
+  labels:
+    app: ai-travel-platform
+    component: social-service
+    version: 1.0.0
+    tier: backend
+    managed-by: kubernetes
+  annotations:
+    description: "Social service handling real-time chat and user interactions"
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+spec:
+  # High availability with 3 replicas to ensure 99.9% uptime
+  replicas: 3
+  
+  # Zero-downtime updates with rolling deployment
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  
+  selector:
+    matchLabels:
+      app: ai-travel-platform
+      component: social-service
+  
+  template:
+    metadata:
+      labels:
+        app: ai-travel-platform
+        component: social-service
+      annotations:
+        # Prometheus monitoring configuration
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+        
+        # Pod configuration checksum to force updates
+        checksum/config: "${CONFIG_CHECKSUM}"
+    
+    spec:
+      # Pod distribution for high availability
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: ai-travel-platform
+              component: social-service
+      
+      containers:
+        - name: social-service
+          image: ai-travel-platform/social-service:${VERSION}
+          imagePullPolicy: Always
+          
+          # Container ports for HTTP, WebSocket, and metrics
+          ports:
+            - name: http
+              containerPort: 3002
+              protocol: TCP
+            - name: websocket
+              containerPort: 8080
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          
+          # Environment configuration from ConfigMap
+          envFrom:
+            - configMapRef:
+                name: ai-travel-platform-config
+          
+          # Resource allocation for performance requirements
+          resources:
+            requests:
+              # Base resources for handling WebSocket connections
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              # Upper bounds to prevent resource exhaustion
+              cpu: 1000m
+              memory: 1Gi
+          
+          # Health monitoring
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          
+          # Security context for container
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+          
+          # Volume mounts for temporary data
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: socket-data
+              mountPath: /var/run/socket
+      
+      # Volumes for temporary data
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: socket-data
+          emptyDir: {}
+      
+      # Pod security settings
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      
+      # Affinity rules for pod distribution
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: ai-travel-platform
+                    component: social-service
+                topologyKey: kubernetes.io/hostname
