@@ -1,0 +1,172 @@
+name: Backend CI/CD
+
+# Trigger configuration for main and develop branches
+on:
+  push:
+    branches: [main, develop]
+    paths: ['src/backend/**']
+  pull_request:
+    branches: [main, develop]
+    paths: ['src/backend/**']
+
+# Permission configuration for security
+permissions:
+  contents: read
+  packages: write
+  deployments: write
+  id-token: write
+  security-events: write
+
+# Environment variables
+env:
+  REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
+  NODE_VERSION: '18.x'
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  lint-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('src/backend/package-lock.json') }}
+          restore-keys: npm-
+          
+      - name: Install dependencies
+        working-directory: src/backend
+        run: npm ci
+        
+      - name: Run ESLint
+        working-directory: src/backend
+        run: npm run lint
+        
+      - name: Run unit tests
+        working-directory: src/backend
+        run: npm run test -- --coverage
+        
+      - name: Upload test coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: src/backend/coverage
+          retention-days: 30
+
+  build-scan:
+    name: Build and Security Scan
+    needs: lint-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+          
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        
+      - name: Build Docker image
+        working-directory: src/backend
+        run: |
+          docker buildx build \
+            --cache-from type=registry,ref=${{ env.REGISTRY }}/backend:cache \
+            --cache-to type=registry,ref=${{ env.REGISTRY }}/backend:cache,mode=max \
+            --tag ${{ env.REGISTRY }}/backend:${{ github.sha }} \
+            --tag ${{ env.REGISTRY }}/backend:latest \
+            --file Dockerfile .
+            
+      - name: Run Snyk container scan
+        uses: snyk/actions/docker@v1
+        with:
+          image: ${{ env.REGISTRY }}/backend:${{ github.sha }}
+          args: --severity-threshold=high
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          
+      - name: Push Docker image
+        if: github.event_name != 'pull_request'
+        run: |
+          docker push ${{ env.REGISTRY }}/backend:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/backend:latest
+
+  deploy:
+    name: Deploy
+    needs: build-scan
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [development, staging, production]
+    environment:
+      name: ${{ matrix.environment }}
+      url: ${{ matrix.environment == 'production' && 'https://api.aitravelplatform.com' || matrix.environment == 'staging' && 'https://staging-api.aitravelplatform.com' || 'https://dev-api.aitravelplatform.com' }}
+    
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+          
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name ai-travel-platform-${{ matrix.environment }}
+        
+      - name: Deploy to Kubernetes
+        run: |
+          if [ "${{ matrix.environment }}" = "production" ]; then
+            # Canary deployment for production
+            kubectl apply -f k8s/canary/
+            kubectl set image deployment/backend backend=${{ env.REGISTRY }}/backend:${{ github.sha }} --record
+            
+            # Monitor canary deployment
+            kubectl rollout status deployment/backend-canary -n production
+            
+            # If successful, update production deployment
+            kubectl set image deployment/backend backend=${{ env.REGISTRY }}/backend:${{ github.sha }} --record
+            
+          elif [ "${{ matrix.environment }}" = "staging" ]; then
+            # Blue/Green deployment for staging
+            kubectl apply -f k8s/blue-green/
+            kubectl set image deployment/backend-green backend=${{ env.REGISTRY }}/backend:${{ github.sha }} --record
+            
+            # Switch traffic to green deployment if health checks pass
+            kubectl patch service backend -p '{"spec":{"selector":{"deployment":"green"}}}'
+            
+          else
+            # Rolling update for development
+            kubectl set image deployment/backend backend=${{ env.REGISTRY }}/backend:${{ github.sha }} --record
+          fi
+          
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment/backend -n ${{ matrix.environment }}
+          
+      - name: Run smoke tests
+        run: |
+          curl -f https://${{ matrix.environment }}-api.aitravelplatform.com/health
+          
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v1.23
+        if: always()
+        with:
+          channel-id: '#deployments'
+          slack-message: "Deployment to ${{ matrix.environment }} ${{ job.status == 'success' && 'succeeded' || 'failed' }} :${{ job.status == 'success' && 'white_check_mark' || 'x' }}:"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
