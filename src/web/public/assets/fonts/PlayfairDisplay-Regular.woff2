@@ -1,0 +1,38 @@
+This is a binary font file that should be obtained from the official Playfair Display font source 
+and converted to WOFF2 format using appropriate font tools.
+
+Key Configuration Requirements:
+
+1. File should be served with the following headers:
+   Content-Type: font/woff2
+   Cache-Control: public, max-age=31536000, immutable
+   Access-Control-Allow-Origin: *
+   Cross-Origin-Resource-Policy: cross-origin
+
+2. Font should be preloaded in HTML head for critical paths:
+   <link rel="preload" 
+         href="/assets/fonts/PlayfairDisplay-Regular.woff2" 
+         as="font" 
+         type="font/woff2" 
+         crossorigin="anonymous">
+
+3. File should be properly compressed WOFF2 format with:
+   - Unicode range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, 
+     U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, 
+     U+FEFF, U+FFFD
+   - OpenType features: liga, kern, clig, calt
+   - Font-display: swap
+   - Weight: 400 (Regular)
+   - Style: normal
+
+4. File should be distributed via CDN with:
+   - Worldwide edge locations
+   - Immutable content caching
+   - WOFF2 compression enabled
+   - SRI hash validation
+
+5. Monitoring should track:
+   - Font load time (alert if >200ms)
+   - Font swap time
+   - Failed loads (alert if >0.1%)
+   - Cache hit ratio
