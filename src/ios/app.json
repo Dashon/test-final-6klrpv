@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "AITravelPlatform",
+    "displayName": "AI Travel Platform",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./ios/AITravelPlatform/Images.xcassets/AppIcon.appiconset/app_icon.png",
+    "splash": {
+      "image": "./ios/AITravelPlatform/Images.xcassets/SplashScreen.imageset/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1A73E8"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "enabled": true
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aitravelplatform",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera for profile photos and document scanning",
+        "NSPhotoLibraryUsageDescription": "This app accesses your photos for profile pictures and sharing travel images",
+        "NSLocationWhenInUseUsageDescription": "This app uses your location for nearby travel recommendations",
+        "NSFaceIDUsageDescription": "This app uses Face ID for secure authentication",
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "requireFullScreen": true
+    },
+    "plugins": [
+      "react-native-safe-area-context",
+      "react-native-gesture-handler", 
+      "react-native-reanimated"
+    ]
+  }
+}
