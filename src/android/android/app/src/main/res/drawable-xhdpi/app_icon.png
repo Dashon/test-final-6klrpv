@@ -1,0 +1,34 @@
+Format: PNG (Portable Network Graphics)
+Dimensions: 192x192 pixels (96dp @ 2.0 scale factor)
+Color Space: sRGB
+Transparency: Enabled (Alpha channel)
+Compression: Lossless with optimization enabled
+Maximum File Size: 32KB
+
+Design Specifications:
+- Corner Radius: 8dp (16 pixels at xhdpi)
+- Padding: 2dp transparent padding (4 pixels at xhdpi)
+- Background Shape: Square with rounded corners
+- Foreground Area: 75-80% coverage
+- Safe Zone: Keep critical elements within inner 66%
+- Optical Center: Slightly above geometric center
+
+Accessibility Requirements:
+- Minimum Contrast Ratio: 4.5:1
+- Color Blindness Compatible: All types
+- Clear Recognition at 48dp display size
+
+Platform Guidelines:
+- Follows Material Design specifications
+- Android 12+ Adaptive Icon compatible
+- No manual drop shadow (system-provided)
+- Clear visibility on light and dark backgrounds
+
+Related Density Variants:
+- mdpi: 48x48 pixels (1.0x)
+- hdpi: 72x72 pixels (1.5x)
+- xxhdpi: 144x144 pixels (3.0x)
+
+Usage Contexts:
+1. Launcher Icon (home screen and app drawer)
+2. Recent Apps view
