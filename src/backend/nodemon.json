@@ -1,0 +1,42 @@
+{
+  "watch": [
+    "api-gateway/src",
+    "booking-service/src",
+    "ml-service/src",
+    "persona-service/src",
+    "professional-service/src",
+    "social-service/src",
+    "shared"
+  ],
+  "ext": ".ts,.js,.json",
+  "ignore": [
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/tests",
+    "**/coverage",
+    "**/dist",
+    "node_modules",
+    "**/.git",
+    "**/logs"
+  ],
+  "exec": "ts-node",
+  "events": {
+    "start": "rimraf **/dist",
+    "restart": "rimraf **/dist"
+  },
+  "env": {
+    "NODE_ENV": "development",
+    "TS_NODE_PROJECT": "./tsconfig.json"
+  },
+  "delay": 1000,
+  "verbose": true,
+  "legacyWatch": false,
+  "signal": "SIGTERM",
+  "colours": true,
+  "restartable": "rs",
+  "stdin": false,
+  "quiet": false,
+  "watch_interval": 1000,
+  "watch_debounce": 1000,
+  "watch_mode": "poll"
+}
